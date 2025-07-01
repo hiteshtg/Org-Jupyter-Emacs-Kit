@@ -33,7 +33,7 @@ It allows you to run Python code blocks directly inside Org files using Jupyter 
 #+END_SRC
 
 ** Step 2: Install the config
-Unzip the provided `.zip` file into your home directory as `~/.emacs.d/`.
+git clone into your home directory inside `~/.emacs.d/`.
 
 ** Step 3: Launch Emacs
 Start Emacs. The config uses `use-package` and will automatically install necessary packages on first run.
