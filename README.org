@@ -1,0 +1,110 @@
+#+TITLE: Org-Jupyter Emacs Kit — Setup & Usage Guide
+#+AUTHOR: Hitesh
+#+OPTIONS: toc:nil
+
+* Introduction
+This Emacs configuration provides a ready-to-use setup integrating **Org-mode** with **Jupyter** support, enhanced with LSP and autocomplete features.
+
+It allows you to run Python code blocks directly inside Org files using Jupyter kernels, making literate programming and reproducible research easy and efficient.
+
+* Features
+- Org-mode + Jupyter integration via `ob-jupyter`
+- Python LSP support (`pylsp`) inside Org source blocks
+- Export `.org` file to `.ipynb`
+- Corfu and Cape for smart autocompletion
+- Doom One theme with icons for a clean UI
+- Dashboard startup screen with recent files, projects, and agenda
+- Snippets support with `yasnippet`
+- Git integration with `magit`
+
+* Installation
+
+** Step 1: Prerequisites
+- Emacs 28 or higher
+- Python 3 installed on your system
+- Install pylsp via pip (if on Arch Based prefer pacman):
+#+BEGIN_SRC sh
+  pip install pylsp
+#+END_SRC
+- Install Jupyter via pip (if on Arch Based prefer pacman):
+
+#+BEGIN_SRC sh
+  pip install jupyter
+#+END_SRC
+
+** Step 2: Install the config
+Unzip the provided `.zip` file into your home directory as `~/.emacs.d/`.
+
+** Step 3: Launch Emacs
+Start Emacs. The config uses `use-package` and will automatically install necessary packages on first run.
+
+** Step 4: Optional Customizations
+- You can replace the dashboard banner by editing the file:  
+  `~/.emacs.d/dragon_dashboard.txt`
+
+* Usage
+
+** Running Jupyter code blocks in Org-mode
+1. Open or create an Org file, e.g., `example.org`.
+2. Insert a Jupyter Python source block:
+
+   #+BEGIN_SRC jupyter-python
+   print("Hello from Jupyter!")
+   #+END_SRC
+
+3. Place the cursor inside the block and press `C-c C-c` to execute it.
+4. The output will appear right below the source block.
+
+** Autocompletion
+- As you type, Corfu will provide suggestions.
+- Use TAB or Shift-TAB to navigate completions.
+
+** LSP support inside Org source blocks
+- The config tricks LSP to work inside temporary buffers created by Org for code blocks, providing real-time syntax checking and completion.
+
+* Tips and Keybindings
+
+| Keybinding       | Action                         |
+|------------------+--------------------------------|
+| C-=`             | Increase text size             |
+| C--`             | Decrease text size             |
+| M-x              | Command execution via Counsel  |
+| C-s              | Search with Swiper             |
+| C-c k            | Search project with Counsel-RG |
+| M-x magit-status | Open Git interface             |
+| C-c C-e n n      | Export .org -> .ipynb          |
+
+
+* Troubleshooting
+
+- If code blocks don’t run, ensure Jupyter is installed and your Python environment is active.
+- For LSP issues, restart Emacs or update packages with `M-x package-refresh-contents`.
+- Backup your existing Emacs config before replacing `~/.emacs.d/`.
+
+* Example Org File Snippet
+
+```org
+#+BEGIN_SRC jupyter-python
+x = 10
+y = 20
+print(x + y)
+#+END_SRC
+
+* Installing Evil
+- Add this Config to init.org file
+
+ #+begin_src emacs-lisp
+   (use-package evil
+     :ensure t
+     :init
+     (setq evil-want-integration t)
+     (setq evil-want-keybinding nil)
+     (setq evil-vsplit-window-right t)
+     (setq evil-split-window-below t)
+     (evil-mode))
+   (use-package evil-collection
+     :after evil
+     :ensure t
+     :config
+     (evil-collection-init))
+ #+end_src
