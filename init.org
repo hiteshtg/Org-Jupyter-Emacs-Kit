@@ -198,6 +198,7 @@
 #+end_src
 
 ** Jupyter
+*** Main Jupyter
 #+begin_src emacs-lisp
   (setq org-confirm-babel-evaluate nil)
   ;; Python setup
@@ -258,6 +259,18 @@
 
   (with-eval-after-load 'jupyter
     (advice-add 'jupyter-org--with-src-block-client :around #'my/org-safe-jupyter-wrapper))
+#+end_src
+
+*** Inline Images
+#+begin_src emacs-lisp
+;; Automatically display inline images after code evaluation in org buffers
+(add-hook 'org-babel-after-execute-hook
+          (lambda ()
+            (when (derived-mode-p 'org-mode)
+              (org-display-inline-images))))
+
+;; Enable inline images by default when opening org files
+(setq org-startup-with-inline-images t)
 #+end_src
 
 * Git Client
