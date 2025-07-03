@@ -64,15 +64,16 @@ Start Emacs. The config uses `use-package` and will automatically install necess
 
 * Tips and Keybindings
 
-| Keybinding       | Action                         |
-|------------------+--------------------------------|
-| C-=`             | Increase text size             |
-| C--`             | Decrease text size             |
-| M-x              | Command execution via Counsel  |
-| C-s              | Search with Swiper             |
-| C-c k            | Search project with Counsel-RG |
-| M-x magit-status | Open Git interface             |
-| C-c C-e n n      | Export .org -> .ipynb          |
+| Keybinding       | Action                          |
+|------------------+---------------------------------|
+| C-=`             | Increase text size              |
+| C--`             | Decrease text size              |
+| M-x              | Command execution via Counsel   |
+| C-s              | Search with Swiper              |
+| C-c k            | Search project with Counsel-RG  |
+| M-x magit-status | Open Git interface              |
+| C-c C-e n n      | Export .org -> .ipynb           |
+| C-c C-r          | Execute .py in v-split in vterm |
 
 
 * Troubleshooting
