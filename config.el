@@ -106,7 +106,7 @@
   (corfu-popupinfo-mode 1))
 
 (defun cape-yasnippet ()
-"Completion-at-point function for Yasnippet with prefix filtering."
+  "Completion-at-point function for Yasnippet with prefix filtering."
 (require 'yasnippet)
 (when (and (bound-and-true-p yas-minor-mode)
            (yas--get-snippet-tables))
@@ -130,16 +130,16 @@
 
 (use-package cape
 :ensure t
-:config
-(require 'cape)
+:init
+;; Define fallback-safe capfs globally
 (defun my/setup-cape ()
   (let ((capfs
-         (list #'cape-dabbrev
-               #'cape-file
-               #'cape-keyword
-               #'cape-yasnippet)))
-    (when (fboundp 'cape-symbol)
-      (push #'cape-symbol capfs))
+         (cl-remove-if-not #'fboundp
+                           (list #'cape-symbol
+                                 #'cape-dabbrev
+                                 #'cape-file
+                                 #'cape-keyword
+                                 #'cape-yasnippet))))
     (setq-local completion-at-point-functions capfs)))
 :hook ((prog-mode . my/setup-cape)
        (org-mode . my/setup-cape)))
@@ -151,9 +151,29 @@
          (rust-mode   . lsp))
   :commands lsp
   :init
-  (setq lsp-completion-provider :none)
-  (setq lsp-pylsp-plugins-jedi-enabled t
-      lsp-pylsp-plugins-rope-completion-enabled t))
+  (setq lsp-completion-provider :none))
+
+(require 'vterm)
+
+(defun my-python-run-in-vsplit-vterm ()
+"Run Python script in a vertical vterm split."
+(interactive)
+(let ((file (buffer-file-name)))
+  (unless file
+    (error "Buffer is not visiting a file"))
+  (save-buffer)
+  (delete-other-windows)
+  (split-window-right)
+  (other-window 1)
+  (if (get-buffer "*Python-VTerm*")
+      (switch-to-buffer "*Python-VTerm*")
+    (vterm "*Python-VTerm*"))
+  (vterm-send-string (format "python3 '%s'" file))
+  (vterm-send-return)
+  (other-window 1)))
+
+(with-eval-after-load 'python
+	(define-key python-mode-map (kbd "C-c C-r") #'my-python-run-in-vsplit-vterm))
 
 (setq org-confirm-babel-evaluate nil)
 ;; Python setup
@@ -233,3 +253,6 @@
 (use-package org)
 
 (setq make-backup-files nil)
+
+(use-package vterm
+  :ensure t)

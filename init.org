@@ -142,7 +142,7 @@
 *** Function for YAs AutoComplete
 #+begin_src emacs-lisp
   (defun cape-yasnippet ()
-  "Completion-at-point function for Yasnippet with prefix filtering."
+    "Completion-at-point function for Yasnippet with prefix filtering."
   (require 'yasnippet)
   (when (and (bound-and-true-p yas-minor-mode)
              (yas--get-snippet-tables))
@@ -169,16 +169,16 @@
 #+begin_src emacs-lisp
   (use-package cape
   :ensure t
-  :config
-  (require 'cape)
+  :init
+  ;; Define fallback-safe capfs globally
   (defun my/setup-cape ()
     (let ((capfs
-           (list #'cape-dabbrev
-                 #'cape-file
-                 #'cape-keyword
-                 #'cape-yasnippet)))
-      (when (fboundp 'cape-symbol)
-        (push #'cape-symbol capfs))
+           (cl-remove-if-not #'fboundp
+                             (list #'cape-symbol
+                                   #'cape-dabbrev
+                                   #'cape-file
+                                   #'cape-keyword
+                                   #'cape-yasnippet))))
       (setq-local completion-at-point-functions capfs)))
   :hook ((prog-mode . my/setup-cape)
          (org-mode . my/setup-cape)))
@@ -191,16 +191,39 @@
 
 * LSP Support
 ** lsp-mode
-*** Final LSP Config
 #+begin_src emacs-lisp
   (use-package lsp-mode
     :hook ((python-mode . lsp)
            (rust-mode   . lsp))
     :commands lsp
     :init
-    (setq lsp-completion-provider :none)
-    (setq lsp-pylsp-plugins-jedi-enabled t
-        lsp-pylsp-plugins-rope-completion-enabled t))
+    (setq lsp-completion-provider :none))
+#+end_src
+
+* Python
+** Run .py
+#+begin_src emacs-lisp
+  (require 'vterm)
+
+  (defun my-python-run-in-vsplit-vterm ()
+  "Run Python script in a vertical vterm split."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (unless file
+      (error "Buffer is not visiting a file"))
+    (save-buffer)
+    (delete-other-windows)
+    (split-window-right)
+    (other-window 1)
+    (if (get-buffer "*Python-VTerm*")
+        (switch-to-buffer "*Python-VTerm*")
+      (vterm "*Python-VTerm*"))
+    (vterm-send-string (format "python3 '%s'" file))
+    (vterm-send-return)
+    (other-window 1)))
+
+  (with-eval-after-load 'python
+  	(define-key python-mode-map (kbd "C-c C-r") #'my-python-run-in-vsplit-vterm))
 #+end_src
 
 ** Jupyter
@@ -295,8 +318,14 @@
 (use-package org)
 #+end_src
 
-* File Stuff
+* File and Terminal Stuff
 ** Stop Making Backup File
 #+begin_src emacs-lisp
 (setq make-backup-files nil)
+#+end_src
+
+** VTerm
+#+begin_src emacs-lisp
+(use-package vterm
+  :ensure t)
 #+end_src
