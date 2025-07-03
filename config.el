@@ -14,24 +14,29 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(use-package exec-path-from-shell
+  :ensure t
+:init (exec-path-from-shell-initialize))
+
 (use-package dashboard
   :config
-  (progn
-    (setq dashboard-startup-banner "~/.emacs.d/dragon_dashboard.txt"
-          dashboard-items '((recents  . 5)
-                            (projects . 5)
-                            (agenda   . 5))
-          initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
-    (dashboard-setup-startup-hook)
-    (add-hook 'after-make-frame-functions
-              (lambda (frame)
-                (with-selected-frame frame
-                  (dashboard-refresh-buffer))))))
+  (setq dashboard-startup-banner "~/.emacs.d/dragon_dashboard.txt"
+        dashboard-items '((recents  . 5)
+                          (projects . 5)
+                          (agenda   . 5))
+	initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  (dashboard-setup-startup-hook)
+
+(add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (dashboard-refresh-buffer)))))
 
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
 
 (use-package doom-themes
+  :ensure t
   :init
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
@@ -48,9 +53,10 @@
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
 (use-package ivy
+  :ensure t
   :diminish
   :init
-  (ivy-mode 1)
+    (ivy-mode 1)
   :bind (("C-s" . swiper)
          :map ivy-minibuffer-map
          ("TAB" . ivy-alt-done)
@@ -71,66 +77,72 @@
   (counsel-mode 1))
 
 (use-package marginalia
-  :init (marginalia-mode))
+  :init
+  (marginalia-mode))
 
 (use-package corfu
-  :init
-  (global-corfu-mode)
-  (setq corfu-auto t
-        corfu-cycle t
-        corfu-auto-prefix 2
-        corfu-auto-delay 0.2
-        corfu-quit-at-boundary t
-        corfu-quit-no-match 'separator
-        corfu-popupinfo-delay 0.2)
-  :bind
-  (:map corfu-map
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous)
-        ("C-g" . corfu-quit)
-        ("<escape>" . corfu-quit))
-  :config
+    :ensure t
+    :init
+    (global-corfu-mode)  ; Enable globally
+    (setq corfu-auto t)  ; Enable auto completion
+    (setq corfu-cycle t)
+    (setq corfu-auto-prefix 2)
+    (setq corfu-auto-delay 0.2)
+    (setq corfu-quit-at-boundary t)  ; Quit completion at word boundary
+    (setq corfu-quit-no-match 'separator)
+    (setq corfu-popupinfo-delay 0.2)  ; Quick documentation popup
+    :bind
+    (:map corfu-map
+          ("TAB" . corfu-next)
+          ([tab] . corfu-next)
+          ("S-TAB" . corfu-previous)
+          ([backtab] . corfu-previous)
+	  ("C-g" . corfu-quit)             ; Cancel popup with C-g
+	  ("<escape>" . corfu-quit)))       ; Cancel popup with Esc
+
+  ;;; Enable Corfu popupinfo for documentation
+  (with-eval-after-load 'corfu
   (require 'corfu-popupinfo)
   (corfu-popupinfo-mode 1))
 
-(defun my/cape-yasnippet ()
-  "Completion-at-point function for Yasnippet with prefix filtering."
-  (require 'yasnippet)
-  (when (and (bound-and-true-p yas-minor-mode)
-             (yas--get-snippet-tables))
-    (let ((start (max (point-min)
-                      (save-excursion
-                        (skip-chars-backward "[:word:]_-")
-                        (point)))))
-      (list start (point)
-            (completion-table-dynamic
-             (lambda (input)
-               (let* ((table (yas--get-snippet-tables))
-                      (snippets (mapcar #'yas--template-key
-                                        (yas--all-templates table)))
-                      (completion-list (cl-remove-if-not #'identity snippets)))
-                 (cl-remove-if-not
-                  (lambda (c) (string-prefix-p input c))
-                  completion-list))))
-            :annotation-function (lambda (s) (concat " [YAS]"))
-            :company-kind (lambda (_) 'snippet)
-            :exclusive 'no))))
+(defun cape-yasnippet ()
+"Completion-at-point function for Yasnippet with prefix filtering."
+(require 'yasnippet)
+(when (and (bound-and-true-p yas-minor-mode)
+           (yas--get-snippet-tables))
+  (let ((start (max (point-min)
+                    (save-excursion
+                      (skip-chars-backward "[:word:]_-")
+                      (point)))))
+    (list start (point)
+          (completion-table-dynamic
+           (lambda (input)
+             (let* ((table (yas--get-snippet-tables))
+                    (snippets (mapcar #'yas--template-key
+                                      (yas--all-templates table)))
+                    (completion-list (cl-remove-if-not #'identity snippets)))
+               (cl-remove-if-not
+                (lambda (c) (string-prefix-p input c))
+                completion-list))))
+          :annotation-function (lambda (s) (concat " [YAS]"))
+          :company-kind (lambda (_) 'snippet)
+          :exclusive 'no))))
 
 (use-package cape
-  :config
-  (defun my/setup-cape ()
-    (let ((capfs
-           (list #'cape-dabbrev
-                 #'cape-file
-                 #'cape-keyword
-                 #'my/cape-yasnippet)))
-      (when (fboundp 'cape-symbol)
-        (push #'cape-symbol capfs))
-      (setq-local completion-at-point-functions capfs)))
-  :hook ((prog-mode . my/setup-cape)
-         (org-mode . my/setup-cape)))
+:ensure t
+:config
+(require 'cape)
+(defun my/setup-cape ()
+  (let ((capfs
+         (list #'cape-dabbrev
+               #'cape-file
+               #'cape-keyword
+               #'cape-yasnippet)))
+    (when (fboundp 'cape-symbol)
+      (push #'cape-symbol capfs))
+    (setq-local completion-at-point-functions capfs)))
+:hook ((prog-mode . my/setup-cape)
+       (org-mode . my/setup-cape)))
 
 (electric-pair-mode 1)
 
@@ -139,37 +151,38 @@
          (rust-mode   . lsp))
   :commands lsp
   :init
-  (setq lsp-completion-provider :none))
+  (setq lsp-completion-provider :none)
+  (setq lsp-pylsp-plugins-jedi-enabled t
+      lsp-pylsp-plugins-rope-completion-enabled t))
 
 (setq org-confirm-babel-evaluate nil)
+;; Python setup
 (setq python-shell-interpreter "python3")
 
-(defvar my/org-src-fake-file "~/.org-src-fake/main.py"
-  "Fake file path to trick LSP for org-babel Python blocks.")
-
-(unless (file-exists-p my/org-src-fake-file)
-  (make-directory (file-name-directory my/org-src-fake-file) t)
-  (with-temp-buffer (write-file my/org-src-fake-file)))
+;; LSP setup
+(defvar my/org-src-fake-file "/tmp/org-src-buffer.py")
 
 (with-eval-after-load 'lsp-mode
   (setq lsp-disabled-clients '(pyls-ms pyright)
         lsp-enabled-clients '(pylsp)
-        lsp-auto-guess-root t
+        lsp-auto-guess-root t ; fallback if project detection fails
         lsp-session-file (expand-file-name ".lsp-session-v1" user-emacs-directory))
-
-  (defun my/org-src--setup-lsp-buffer ()
+  
+  ;; Setup LSP for org src temp buffers
+  (defun my/org-src--maybe-setup-lsp ()
     (when (and (eq major-mode 'python-mode)
                (not (bound-and-true-p lsp-mode)))
+      ;; Set fixed fake file path to fool LSP
       (setq buffer-file-name my/org-src-fake-file)
       (lsp)))
-
-  (defun my/org-src--unset-fake-file-name ()
+  
+  (defun my/org-src--cleanup-fake-file-name ()
     (when (equal buffer-file-name my/org-src-fake-file)
       (setq buffer-file-name nil)))
-
-  (add-hook 'org-src-mode-hook #'my/org-src--setup-lsp-buffer)
-  (add-hook 'org-src-mode-exit-hook #'my/org-src--unset-fake-file-name))
-
+  
+  (add-hook 'org-src-mode-hook #'my/org-src--maybe-setup-lsp)
+  (add-hook 'org-src-mode-exit-hook #'my/org-src--cleanup-fake-file-name))
+;; Jupyter for org-babel
 (add-to-list 'load-path "~/.emacs.d/man_installed/emacs-jupyter")
 (use-package jupyter
   :defer t
@@ -188,6 +201,7 @@
           (:exports . "both")
           (:results . "output"))))
 
+;; .org to .ipynb
 (add-to-list 'load-path "~/.emacs.d/man_installed/ox-ipynb/")
 (require 'ox-ipynb)
 
@@ -195,6 +209,7 @@
   "Only call jupyter-org functions if in Org mode."
   (if (derived-mode-p 'org-mode)
       (apply orig-fn args)
+    ;; Otherwise do nothing (avoids crash in *Help*)
     nil))
 
 (with-eval-after-load 'jupyter
@@ -210,7 +225,8 @@
 (use-package magit)
 
 (use-package yasnippet
-  :config (yas-global-mode 1))
+  :config
+  (yas-global-mode 1))
 
 (use-package yasnippet-snippets)
 
