@@ -42,6 +42,11 @@ Start Emacs. The config uses `use-package` and will automatically install necess
 - You can replace the dashboard banner by editing the file:  
   `~/.emacs.d/dragon_dashboard.txt`
 
+** Create a Folder
+#+begin_src sh
+mkdir -p ~/.org-src-fake && touch ~/.org-src-fake/main.py
+#+end_src
+
 * Usage
 
 ** Running Jupyter code blocks in Org-mode
