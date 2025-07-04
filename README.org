@@ -27,11 +27,13 @@ It allows you to run Python code blocks directly inside Org files using Jupyter 
   pip install python-lsp-server
 #+END_SRC
 - Install Jupyter via pip (if on Arch Based prefer pacman):
-
 #+BEGIN_SRC sh
   pip install jupyter
 #+END_SRC
-
+- Install CMake
+  #+begin_src sh
+    sudo pacman -S cmake
+  #+end_src
 ** Step 2: Install the config
 git clone into your home directory inside `~/.emacs.d/`.
 

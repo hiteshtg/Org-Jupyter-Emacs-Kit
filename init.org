@@ -24,6 +24,25 @@
     :ensure t
   :init (exec-path-from-shell-initialize))
 #+end_src
+* File and Terminal Stuff
+** Stop Making Backup File
+#+begin_src emacs-lisp
+(setq make-backup-files nil)
+#+end_src
+
+** VTerm
+#+begin_src emacs-lisp
+(use-package vterm
+  :ensure t)
+#+end_src
+
+** iedit
+#+begin_src emacs-lisp
+  (use-package iedit
+    :ensure t)
+  (global-set-key (kbd "C-;") 'iedit-mode)
+#+end_src
+
 * Dashboard
 #+begin_src emacs-lisp
   (use-package dashboard
@@ -321,21 +340,3 @@
 (use-package org)
 #+end_src
 
-* File and Terminal Stuff
-** Stop Making Backup File
-#+begin_src emacs-lisp
-(setq make-backup-files nil)
-#+end_src
-
-** VTerm
-#+begin_src emacs-lisp
-(use-package vterm
-  :ensure t)
-#+end_src
-
-** iedit
-#+begin_src emacs-lisp
-  (use-package iedit
-    :ensure t)
-  (global-set-key (kbd "C-;") 'iedit-mode)
-#+end_src
