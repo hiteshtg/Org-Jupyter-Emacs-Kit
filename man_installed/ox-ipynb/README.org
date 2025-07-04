@@ -1,0 +1,34 @@
+#+TITLE: ox-ipynb --- Convert an org-file to an ipynb
+
+
+This module allows you to export an org-file to an Ipython notebook. Python and R notebooks are currently supported. It is not currently possible to mix these languages.
+
+* About this module
+
+The Jupyter/Ipython notebooks are ultimately just json files. This module parses an org-file, and creates json files that represent them. The parsing is rudimentary. Jupyter notebooks only have two basic cells: text and code. This module tries to parse the org-file into those two kinds of cells.
+
+See this example org-file: [[./example.org]] and the corresponding ipynb: [[./example.ipynb]].
+
+#+BEGIN_SRC emacs-lisp
+(require 'ox-ipynb)
+#+END_SRC
+
+This will install a new export menu titled "Export to jupyter notebook" with the sub-options to export to a buffer, to a file, to a file and open, and to slides and open.
+
+** Slideshows
+
+See [[./ipynb-slideshow.org]] to see how to make a slideshow out an org-file.
+
+** Adding a new language
+
+It is probably possible to add new languages  by adding to the variables =ox-ipynb-kernelspecs= and =ox-ipynb-language-infos=. These were reverse-engineered to make the json metadata. I do not know what the minimal setup for this is required and suggest adapting these variables by example.
+
+** Adding scientific references
+
+You can use [[https://github.com/jkitchin/org-ref][org-ref]] to add scientific references. To make it work, you should set this variable.
+
+#+BEGIN_SRC emacs-lisp
+(setq ox-ipynb-preprocess-hook '((lambda () (org-ref-csl-preprocess-buffer 'html))))
+#+END_SRC
+
+Then the citations and bibliography will be replaced by CSL rendered citations.

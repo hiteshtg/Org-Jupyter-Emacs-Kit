@@ -1,0 +1,690 @@
+An interface to communicate with Jupyter kernels in Emacs.
+
+#+BEGIN_HTML
+<a href="https://melpa.org/#/jupyter"><img src="https://melpa.org/packages/jupyter-badge.svg"></a>
+<a href="https://github.com/emacs-jupyter/jupyter/actions/workflows/test.yml"><img src="https://github.com/emacs-jupyter/jupyter/actions/workflows/test.yml/badge.svg" /></a>
+<a href="https://gitter.im/emacs-jupyter/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge"><img src="https://badges.gitter.im/emacs-jupyter/community.svg" /></a>
+#+END_HTML
+
+* Table of Contents                                                     :TOC:
+- [[#what-does-this-package-do][What does this package do?]]
+- [[#how-do-i-install-this-package][How do I install this package?]]
+  - [[#using-melpa][Using MELPA]]
+  - [[#manual-installation][Manual installation]]
+  - [[#building-the-widget-support-experimental][Building the widget support (EXPERIMENTAL)]]
+- [[#related-packages][Related packages]]
+  - [[#ob-ipython][=ob-ipython=]]
+  - [[#emacs-ipython-notebook-ein][=emacs-ipython-notebook= (=ein=)]]
+- [[#how-do-i-use-the-built-in-frontends][How do I use the built-in frontends?]]
+  - [[#repl][REPL]]
+  - [[#org-mode-source-blocks][=org-mode= source blocks]]
+  - [[#kernelnotebook-server][Kernel/notebook server]]
+  - [[#customizable-variables-available-for-all-frontends][Customizable variables available for all frontends]]
+
+* What does this package do?
+
+- Provides REPL and =org-mode= source block frontends to Jupyter kernels.
+
+- Kernel interactions integrated with Emacs's built-in features.  For
+  example
+
+  - Inspecting a piece of code under =point= will display the information for
+    that symbol in the =*Help*= buffer. You can re-visit inspection requests
+    made to the kernel by calling =help-go-back= or =help-go-forward= while in
+    the =*Help*= buffer.
+
+  - Uses the =completion-at-point= interface for code completion.
+
+  - Kernel requests for user input entered through the minibuffer.
+
+  - You can search through REPL history using =isearch=.
+
+* How do I install this package?
+
+** Using MELPA
+
+*NOTE:* This package relies on the =emacs-zmq= package which means your
+Emacs needs to have been built with module support.  See the README of
+that package for more information.
+
+You can install this package with any package manager that allows you
+to install MELPA packages.  For Emacs's built-in package manager:
+
+1. Ensure MELPA is in =package-archives=
+
+   #+BEGIN_SRC elisp
+   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+   #+END_SRC
+
+2. Ensure the latest versions of MELPA packages are available
+
+   =M-x package-refresh-contents RET=
+
+3. Install Jupyter
+
+   =M-x package-install RET jupyter RET=
+
+** Manual installation
+
+For a manual installation you can add the repository directory to your
+=load-path= and ensure the following dependencies are installed:
+
+- markdown-mode (optional) :: https://jblevins.org/projects/markdown-mode/
+- company-mode (optional) :: http://company-mode.github.io/
+- emacs-websocket :: https://github.com/ahyatt/emacs-websocket
+- simple-httpd :: https://github.com/skeeto/emacs-web-server
+- zmq :: http://github.com/nnicandro/emacs-zmq
+
+#+BEGIN_SRC elisp
+(add-to-list 'load-path "~/path/to/jupyter")
+(require 'jupyter)
+#+END_SRC
+** Building the widget support (EXPERIMENTAL)
+:PROPERTIES:
+:ID:       59559FA3-59AD-453F-93E7-113B43F85493
+:END:
+
+There is limited support for interacting with Jupyter widgets through
+an external browser.  In this case, Emacs acts as a relay for passing
+messages between the kernel and the browser.
+
+To try it out, install =node= (https://nodejs.org/en/) then run the
+following shell command from the top-level directory of this project.
+
+#+BEGIN_SRC shell
+make widgets
+#+END_SRC
+
+After, launch Emacs, connect to a kernel (e.g. through a REPL), and
+run some code that creates a widget.
+
+* How do I run the tests?
+
+You must have [[https://github.com/doublep/eldev][Eldev]] installed to be able to run the tests.  Once Eldev
+is installed, then in the top level directory of this project you can
+run one of the following from the command line
+
+#+begin_src shell
+# Run the whole set of tests
+make test
+# Run tests tagged with org
+make test TAGS=org
+# Run tests tagged with org and babel
+make test TAGS=org,babel
+# Run tests whose name match a pattern
+make test PATTERN=font-lock
+#+end_src
+
+* Related packages
+
+** =ob-ipython=
+
+The =org-mode= source block frontend in =emacs-jupyter= is similar to what is
+offered by [[https://github.com/gregsexton/ob-ipython][ob-ipython]] (and also the [[https://github.com/jkitchin/scimax][scimax]] version).
+
+** =emacs-ipython-notebook= (=ein=)
+
+[[https://github.com/millejoh/emacs-ipython-notebook][ein]] is a complete Jupyter notebook interface in Emacs with many powerful
+features for Python kernels. There is some overlap in the features provided by
+=emacs-jupyter= and =ein=, but I have never used =ein= so I cannot speak very
+much about any similarities/differences.
+
+* How do I use the built-in frontends?
+** REPL
+
+=M-x jupyter-run-repl= launches a new local kernel and displays a REPL
+buffer.
+
+=M-x jupyter-connect-repl= connects to an existing kernel using the
+kernel's [[https://jupyter-client.readthedocs.io/en/stable/kernels.html#connection-files][connection file]], which is supplied by the user, and displays
+a REPL buffer.
+
+The REPL supports some of the [[https://ipython.readthedocs.io/en/stable/interactive/plotting.html#rich-outputs][rich output]] that a kernel may send to a
+client, e.g. images, LaTeX, and HTML.
+
+*** Rich kernel output
+
+Below is a table of the supported output mimetypes and their
+dependencies.  If a dependency is not available for a particular
+mimetype, a mimetype of lower priority gets displayed instead.
+
+For widgets, before attempting to open one, you also need to run the
+shell command =make widgets= in the top-level directory of this project
+to build some JavaScript files.
+
+| Mimetype                                 | Dependencies              |
+|------------------------------------------+---------------------------|
+| =application/vnd.jupyter.widget-view+json= | [[https://github.com/ahyatt/emacs-websocket][websocket]], [[https://github.com/skeeto/emacs-web-server][simple-httpd]]   |
+| =text/html=                                | Emacs built with libxml2  |
+| =text/markdown=                            | [[https://jblevins.org/projects/markdown-mode/][markdown-mode]]             |
+| =text/latex=                               | [[https://orgmode.org/][org-mode]]                  |
+| =image/svg+xml=                            | Emacs built with librsvg2 |
+| =image/png=                                | none                      |
+| =text/plain=                               | none                      |
+*** Inspection
+
+To inspect the code around =point= press =M-i=.
+
+*** Completion
+
+Completion is implemented through the =completion-at-point= interface
+and should just work.
+
+
+
+In addition to completing symbols in the REPL buffer, completion also
+works in buffers [[id:DA597E05-E9A9-4DCE-BBD7-6D25238638C5][associated]] with a REPL. For =org-mode= users, there is
+even completion in the =org-mode= buffer when editing the contents of a
+Jupyter source code block.
+*** REPL history
+
+To navigate the REPL history: =M-n= and =M-p=.
+
+To search the REPL history: =C-s= and =C-s C-r=.
+
+*** Associating buffers with a REPL (=jupyter-repl-interaction-mode=)
+:PROPERTIES:
+:ID:       DA597E05-E9A9-4DCE-BBD7-6D25238638C5
+:END:
+
+=M-x jupyter-repl-associate-buffer= sets the =jupyter-current-client= of
+the current buffer to an existing REPL client and
+enables =jupyter-repl-interaction-mode=, allowing you to, for example,
+send the current line for evaluation by the client's kernel.
+
+When =jupyter-repl-interaction-mode= is enabled, the following
+keybindings are available
+
+| Key binding | Command                       |
+|-------------+-------------------------------|
+| =C-M-x=       | =jupyter-eval-defun=            |
+| =M-i=         | =jupyter-inspect-at-point=      |
+| =C-c C-b=     | =jupyter-eval-buffer=           |
+| =C-c C-c=     | =jupyter-eval-line-or-region=   |
+| =C-c C-i=     | =jupyter-repl-interrupt-kernel= |
+| =C-c C-r=     | =jupyter-repl-restart-kernel=   |
+| =C-c C-s=     | =jupyter-repl-scratch-buffer=   |
+| =C-c C-o=     | =jupyter-eval-remove-overlays=  |
+| =C-c M-:=     | =jupyter-eval-string=           |
+
+**** Integration with =emacsclient=
+
+If =emacsclient= is set as the =EDITOR= and evaluated code opens a file in
+a =major-mode= compatible with the client that sent the code, the opened
+file will automatically be associated with the client and have
+=jupyter-repl-interaction-mode= enabled.
+
+This feature probably wont work correctly when there are multiple
+competing clients sending requests to their underlying kernels that
+want to open files or if the underlying kernel takes longer
+than =jupyter-long-timeout= seconds to open a file.
+
+See =jupyter-server-mode-set-client= for more details.
+
+*** =jupyter-repl-maximum-size=
+
+A variable that determines the maximum number of lines a REPL buffer
+can have before being truncated.
+
+*** =jupyter-repl-allow-RET-when-busy=
+
+A variable that determines whether to allow insertion of newlines in a
+REPL cell when a kernel is busy or not.  See the variable
+documentation for more details.
+
+*** =jupyter-repl-without-is-complete=
+
+A variable that determines whether or not an is_complete_request is
+sent to the kernel to determine the syntactical correctness, i.e. when
+it is safe to send it for evaluation.  When it is non-nil, no
+is_complete_request is used and the main way to send code to kernels
+for evaluation is a press of =S-RET=, =RET= would insert a newline and
+indent in this case.  When the variable is nil, =RET= sends an
+is_complete_request to determine if the code is valid to send for
+execution or not and sends it if it is or inserts a newline and
+indents if it isn't.
+
+See also =jupyter-repl-use-builtin-is-complete= for another method of
+sending code to kernels without the use of an is_complete_request.
+
+*** =jupyter-repl-echo-eval-p=
+
+A variable that determines whether code evaluated with
+the =jupyter-eval-*= commands gets copied over to a REPL input cell or
+not.  You can set this variable to =t= if you prefer having the history
+of all evaluated code visible in the REPL.
+
+** =org-mode= source blocks
+
+To enable support for Jupyter based source code blocks, add =jupyter=
+to =org-babel-load-languages=.  Ensure the =jupyter= entry is added last
+since loading =ob-jupyter= depends on the value of variables such
+as =org-src-lang-modes= and =org-babel-tangle-lang-exts=.
+
+#+BEGIN_SRC elisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (julia . t)
+   (python . t)
+   (jupyter . t)))
+#+END_SRC
+
+After loading, source code blocks with names like =jupyter-LANG= will be
+available for use.  =LANG= can be any one of the kernel languages found
+on your system.  See =jupyter-available-kernelspecs=.
+
+- The =:session= parameter is required for all Jupyter based source code
+  blocks.
+
+  #+BEGIN_SRC org
+  ,#+BEGIN_SRC jupyter-python :session py
+  x = 'foo'
+  y = 'bar'
+  x + ' ' + y
+  ,#+END_SRC
+  #+END_SRC
+
+- By default, source blocks are executed synchronously. To execute a
+  source block asynchronously set the =:async= parameter to =yes=:
+
+  #+BEGIN_SRC org
+  ,#+BEGIN_SRC jupyter-python :session py :async yes
+  x = 'foo'
+  y = 'bar'
+  x + ' ' + y
+  ,#+END_SRC
+  #+END_SRC
+
+- To change the kernel, set the =:kernel= parameter.
+  
+  #+BEGIN_SRC org
+  ,#+BEGIN_SRC jupyter-python :session py :async yes :kernel python2
+  x = 'foo'
+  y = 'bar'
+  x + ' ' + y
+  ,#+END_SRC
+  #+END_SRC
+
+  Note, the same session name can be used for different values of =:kernel= since
+  the underlying REPL buffer's name is based on both =:session= and =:kernel=.
+
+- Any of the default parameters for a language can be changed by
+  setting =org-babel-default-header-args:jupyter-LANG= to an appropriate
+  value. For example to change the defaults for the =julia= kernel, you
+  can set =org-babel-default-header-args:jupyter-julia= to something
+  like
+
+  #+BEGIN_SRC elisp
+  (setq org-babel-default-header-args:jupyter-julia '((:async . "yes")
+                                                      (:session . "jl")
+                                                      (:kernel . "julia-1.0")))
+  #+END_SRC
+*** Note on the language name provided by a kernelspec
+
+Some kernelspecs use spaces in the name of the kernel language. Those
+get replaced by dashes in the language name you need to use for the
+corresponding source blocks, e.g. =Wolfram Language= has the source
+block language =jupyter-Wolfram-Language=.
+
+*** Integration with =ob-async=
+
+If you have =ob-async= installed and are getting errors when your source
+block specifies the =:async= header argument, try putting something like
+the following in your configuration:
+
+#+BEGIN_SRC elisp
+(setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+#+END_SRC
+
+See [[https://github.com/astahlman/ob-async#ob-async-no-async-languages-alist][ob-async-no-async-languages-alist]] for more details.
+
+*** Issues with =ob-ipython=
+
+If both =ob-ipython= and this package are installed, you may experience
+issues such as [[https://github.com/dzop/emacs-jupyter/issues/133#issuecomment-502444999][this one]], causing =Search failed= errors.  To avoid such
+errors, remove =ipython= from =org-babel-do-load-languages= and restart
+your Emacs.
+
+*** Overriding built-in src-block languages
+
+Instead of having to specify =jupyter-LANG= as a source block name, you
+can have =LANG= source blocks use the Jupyter machinery.  To do so,
+place a call to =org-babel-jupyter-override-src-block= somewhere in your
+config (after the call to =org-babel-do-load-languages=).
+
+#+BEGIN_SRC elisp
+(org-babel-jupyter-override-src-block "python")
+#+END_SRC
+
+After calling the above function, all =python= source blocks are effectively
+aliases of =jupyter-python= source blocks and the variable
+=org-babel-default-header-args:python= will be set to the value of
+=org-babel-default-header-args:jupyter-python=.
+
+Note, =org-babel-default-header-args:python= will *not* be an alias
+of =org-babel-default-header-args:jupyter-python=, the value of the
+former is merely set to the value of the latter after
+calling =org-babel-jupyter-override-src-block=.
+
+You can restore the original behavior by
+calling =org-babel-jupyter-restore-src-block=.
+
+#+BEGIN_SRC elisp
+(org-babel-jupyter-restore-src-block "python")
+#+END_SRC
+
+*** Rich kernel output
+
+The supported display mimetypes ordered by priority are:
+- text/org
+- image/svg+xml, image/jpeg, image/png
+- text/html
+- text/markdown
+- text/latex
+- text/plain
+
+**** A note on using the =:results= header argument
+
+There are some cases where the normal result insertion mechanism may
+not be wanted.  To control result insertion somewhat, use the =:results=
+header argument:
+
+- Insert unwrapped LaTeX :: Normally LaTeX results are wrapped in a
+     =BEGIN_EXPORT= block, in order to insert LaTeX unwrapped, specify
+     =:results raw=.
+- Suppress table creation :: Whenever a result can be converted into an
+     =org-mode= table, e.g. when it look like =[1, 2 , 3]=, it is automatically
+     converted into a table. To suppress this behavior you can specify
+     =:results scalar=.
+
+**** Fixing the file name of images with the =:file= argument
+
+Whenever an image result is returned, a random image file name is
+generated and the image is written
+to =org-babel-jupyter-resource-directory=. To specify your own file name
+for the image, set the =:file= header argument.
+
+If no file extension is specified in the provided =:file=, then one will be inferred
+from the returned output. This can be useful in scenarios where the file resulting
+from the src-block can have different types depeneding on the code, e.g. if the image
+type returned can be either =png= or =svg= depending on certain settings, you can
+specify =:file = output= which will be converted into  =output.png= or =output.svg=
+depending on the MIME type return by the executed src-block.
+
+**** Changing the mime-type priority with the =:display= argument
+
+The priority of mimetypes used to display results can be overwritten using the
+=:display= option. If instead of displaying HTML results we'd wish to display
+plain text, the argument =:display text/plain text/html= would prioritize plain
+text results over html ones. The following example displays plain text instead
+of HTML:
+#+BEGIN_SRC org
+,#+BEGIN_SRC jupyter-python :session py :display plain
+import pandas as pd
+data = [[1, 2], [3, 4]]
+pd.DataFrame(data, columns=["Foo", "Bar"])
+,#+END_SRC
+#+END_SRC
+
+**** Image output without the =:file= header argument
+
+For images sent by the kernel, if no =:file= parameter is provided to the code
+block, a file name is automatically generated based on the image data and the
+image is written to file in =org-babel-jupyter-resource-directory=. This is
+great for quickly generating throw-away plots while you are working on your
+code. Once you are happy with your results you can specify the =:file=
+parameter to fix the file name.
+**** =org-babel-jupyter-resource-directory=
+
+This variable is similar to =org-preview-latex-image-directory= but solely for
+any files created when Jupyter code blocks are run, e.g. automatically
+generated image file names.
+
+***** Deletion of generated image files
+
+Whenever you run a code block multiple times and replace its results, before
+the results are replaced, any generated files will be deleted to reduce the
+clutter in =org-babel-jupyter-resource-directory=.
+**** Convert rich kernel output with the =:pandoc= header argument
+
+By default html, markdown, and latex results are wrapped in a =BEGIN_EXPORT=
+block. If the header argument =:pandoc t= is set, they are instead
+converted to org-mode format with [[https://pandoc.org/][pandoc]]. You can control which outputs get
+converted with the custom variable =jupyter-org-pandoc-convertable=.
+
+*** Editing the contents of a code block
+
+When editing a Jupyter code block's contents, i.e. by pressing =C-c '= when at
+a code block, =jupyter-repl-interaction-mode= is automatically enabled in the
+edit buffer and the buffer will be associated with the REPL session of the code
+block (see =jupyter-repl-associate-buffer=).
+
+You may also bind the command =org-babel-jupyter-scratch-buffer= to an
+appropriate key in =org-mode= to display a scratch buffer in the code block's
+=major-mode= and connected to the code block's session.
+*** Connecting to an existing kernel
+
+To connect to an existing kernel, pass the kernel's connection file as the
+value of the =:session= parameter. The name of the file must have a =.json=
+suffix for this to work.
+**** Remote kernels
+
+If the connection file is a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Remote-Files.html][remote file name]], i.e. has a prefix like
+=/method:host:=, the kernel's ports are assumed to live on =host=. Before
+attempting to connect to the kernel, =ssh= tunnels for the connection are
+created. So if you had a remote kernel on a host named =ec2= whose connection
+file is =/run/user/1000/jupyter/kernel-julia-0.6.json= on that host, you could
+specify the =:session= like
+
+#+BEGIN_SRC org
+,#+BEGIN_SRC jupyter-julia :session /ssh:ec2:/run/user/1000/jupyter/kernel-julia-0.6.json
+...
+,#+END_SRC
+#+END_SRC
+
+Note, the kernel on the remote host needs to have the ZMQ socket ports exposed.
+This means that starting a kernel using
+
+#+BEGIN_SRC shell
+jupyter notebook --no-browser
+#+END_SRC
+
+currently doesn't work since the notebook server does not allow communication
+with a kernel using ZMQ sockets. You will have to use the connection file
+created from using something like
+
+#+BEGIN_SRC shell
+jupyter kernel --kernel=python
+#+END_SRC
+
+***** Password handling for remote connections
+Currently there is no password handling, so if your =ssh= connection requires a
+password I suggest you instead use [[https://www.ssh.com/ssh/keygen/][key-based authentication]]. Or if you are
+connecting to a server using a =pem= file add something like
+
+#+BEGIN_SRC conf
+Host ec2
+    User <user>
+    HostName <host>
+    IdentityFile <identity>.pem
+#+END_SRC
+
+to your =~/.ssh/config= file.
+*** Starting a remote kernel
+
+If =:session= is a remote file name that doesn't end in =.json=, e.g.
+=/ssh:ec2:jl=, then a kernel on the remote host =/ssh:ec2:= is started using
+the =jupyter kernel= command on the host. The local part of the session name
+serves to distinguish different remote sessions on the same host.
+
+*** Communicating with kernel (notebook) servers
+
+If =:session= is a TRAMP file name like =/jpy:localhost#8888:NAME= it is
+interpreted as corresponding to a connection to a kernel through a Jupyter
+notebook server located at =http://localhost:8888=.
+
+If =NAME= is a kernel ID corresponding to an existing kernel on a server,
+e.g. =/jpy::161b2318-180c-497a-b4bf-de76176061d9=, then a connection to an
+existing kernel with the corresponding ID will be made. Otherwise, a new kernel
+will be launched on the server and =NAME= will be used as an identifier for the
+session.
+
+When a new kernel is launched, =NAME= will also be associated with the kernel's
+ID, see =jupyter-server-kernel-names=. This is useful to distinguish Org
+mode =:session= kernels from other ones in the buffer shown
+by =jupyter-server-list-kernels=.
+
+When connecting to an existing kernel, i.e. when =NAME= is the ID of a kernel,
+the =:kernel= header argument must match the name of the kernel's kernelspec.
+
+To connect to a kernel behind an =HTTPS= connection, use a TRAMP file name that
+looks like =/jpys:...= instead.
+
+*** Standard output, displayed data, and code block results
+
+In contrast to non-Jupyter code blocks, the kernel of Jupyter code
+block can request extra data, other than stdout or a code block's
+result, be displayed (see [[https://jupyter-client.readthedocs.io/en/stable/messaging.html#display-data][display_data messages]]).
+
+To account for this, Jupyter code blocks do not go through the
+normal =org-mode= result insertion mechanism
+(see =org-babel-insert-result=), instead providing its own result
+insertion.  The downside is that, compared to normal =org-mode= code
+blocks, only a small subset of the header arguments are supported.
+The upside is that all forms of results produced by a kernel can be
+inserted into the buffer similar to a Jupyter notebook.
+
+*** =jupyter-org-interaction-mode=
+
+A minor mode that enables completion and custom keybindings when =point= is
+inside a Jupyter code block. This mode is enabled by default in =org-mode=
+buffers, but only has an effect when =point= is inside a Jupyter code block.
+
+**** Custom keybindings inside Jupyter code blocks
+
+You can define new keybindings that are enabled when =point= is inside a
+Jupyter code block by using the function =jupyter-org-define-key=. These
+bindings are added to =jupyter-org-interaction-mode-map= and are only active
+when =jupyter-org-interaction-mode= is enabled.
+
+By default the following keybindings from =jupyter-repl-interaction-mode= are
+available when =jupyter-org-interaction-mode= is enabled
+
+| Key binding | Command                         |
+|-------------+---------------------------------|
+| =C-M-x=     | =jupyter-eval-defun=            |
+| =M-i=       | =jupyter-inspect-at-point=      |
+| =C-x C-e=   | =jupyter-eval-line-or-region=   |
+| =C-c C-i=   | =jupyter-repl-interrupt-kernel= |
+| =C-c C-r=   | =jupyter-repl-restart-kernel=   |
+
+*** Disable automatic connections to a source block session
+
+When typing into the region of a Jupyter source block, under certain
+conditions, an attempt at connecting to the source block's session is
+made if not already connected.
+
+This behavior can be suppressed by setting =jupyter-org-auto-connect=
+to =nil=.  In this case, a connection is attempted upon executing a
+source block, for example.
+
+*** Enable client-side queuing of requests
+
+If the customizable variable =jupyter-org-queue-requests= is non-nil,
+then perform client side queuing of source block execute requests.
+This means that when multiple requests are made, for example by
+executing a subtree, the requests are queued locally in Emacs instead
+of sending all the requests immediately to the kernel as would happen
+when =:async yes= is specified on all the source blocks.  It is only
+when one request finishes that the next is sent.  In addition, if any
+request fails all the queued requests that are meant to come after it
+are aborted and do not get sent to the kernel.
+
+To turn client side queuing on or off you
+can =M-x jupyter-org-toggle-request-queuing=.
+
+** Kernel/notebook server
+*** Managing live kernels
+
+The main entry point for working with a kernel server is the
+=jupyter-server-list-kernels= command which shows a list of all live kernels
+from the server URL that you provide when first calling the command. Any
+subsequent calls to the command will use the same URL as the first call. To
+change server URLs give a prefix argument, =C-u M-x jupyter-server-list-kernels=. This
+will then set the current server URL for future calls to the one you provide.
+See the =jupyter-current-server= command for more details.
+
+From the buffer shown by =jupyter-server-list-kernels= you can launch new kernels
+(=C-RET=), connect a REPL to an existing kernel (=RET=), interrupt a kernel
+(=C-c TAB=), kill a kernel (=C-c C-d= or =d=), refresh the list of kernels (=g=) etc.
+See the =jupyter-server-kernel-list-mode= for all the available key bindings.
+
+Note, the =default-directory= of the =jupyter-server-kernel-list-mode= buffer
+will be the root directory of the kernel server (so that =dired-jump= will show
+a =dired= listing of the directory). See the section on TRAMP integration
+below.
+
+*** Naming kernels
+
+From the =jupyter-server-list-kernels= buffer one can also name (or rename) a
+kernel (=R=) so that it has an identifier other than its ID. Naming a kernel adds
+the name to the =jupyter-server-kernel-names= global variable in a form suitable
+for persisting across Emacs sessions. See its documentation for more details
+about persisting its value.
+
+*** TRAMP integration
+
+There is also integration with the Jupyter notebook contents API in the form of
+a TRAMP backend. This means that reading/writing the contents of directories
+the notebook server has access to can be done using normal Emacs file
+operations using file names with TRAMP syntax. Two new TRAMP file name methods
+are defined, =jpy= for HTTP connections and =jpys= for HTTPS connections. So
+suppose you have a local notebook server at http://localhost:8888, then to
+access its directory contents you can type
+
+#+begin_example
+M-x dired RET /jpy:localhost#8888:/
+#+end_example
+
+Note =localhost= is the default host and =8888= is the default port so =/jpy::=
+is equivalent to =/jpy:localhost#8888:=. You can change the defaults by
+modifying the =jpy= or =jpys= methods in the variable =tramp-methods= and
+=tramp-default-host-alist=.
+
+*** =jupyter-api-authentication-method=
+
+Authentication method used for new notebook server connections. By default,
+when connecting to a new notebook server you will be asked if either a password
+or a token should be used for authentication. If you only use tokens for
+authentication you can change this variable to avoid being asked on every new
+connection.
+
+** Customizable variables available for all frontends
+
+*** =jupyter-eval-use-overlays=
+
+When non-nil, display the =text/plain= representation of evaluation
+results inline using overlays.  All other representations are
+displayed in the usual way.  This only works with the =jupyter-eval-*=
+commands like =jupyter-eval-line-or-region=.
+
+You can control the appearance of the overlay,
+see =jupyter-eval-overlay-prefix= and the =jupyter-eval-overlay= face.
+
+To clear all overlays from the buffer,
+bind =jupyter-eval-remove-overlays= to some key.  Its bound to =C-c C-o=
+when =jupyter-repl-interaction-mode= is enabled.  Individual overlays
+are removed whenever the text in the region that was evaluated is
+modified.
+
+For multi-line overlays you can fold/unfold the overlay by
+pressing =S-RET= when =point= is inside the region of code that caused the
+overlay to be created.  See =jupyter-eval-overlay-keymap=.
+
+*** =jupyter-eval-short-result-max-lines=
+
+If the number of lines of an evaluation result is smaller than this
+variable, the function stored
+in =jupyter-eval-short-result-display-function= is used to display a
+result.
