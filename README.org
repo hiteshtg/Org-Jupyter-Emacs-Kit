@@ -48,7 +48,7 @@ Start Emacs. The config uses `use-package` and will automatically install necess
 1. Open or create an Org file, e.g., `example.org`.
 2. Insert a Jupyter Python source block:
 
-   #+BEGIN_SRC jupyter-python
+   #+BEGIN_SRC jupyter-python :session py
    print("Hello from Jupyter!")
    #+END_SRC
 
