@@ -24,7 +24,7 @@ It allows you to run Python code blocks directly inside Org files using Jupyter 
 - Python 3 installed on your system
 - Install pylsp via pip (if on Arch Based prefer pacman):
 #+BEGIN_SRC sh
-  pip install pylsp
+  pip install python-lsp-server
 #+END_SRC
 - Install Jupyter via pip (if on Arch Based prefer pacman):
 
