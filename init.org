@@ -111,6 +111,7 @@
 
 * Auto Completion
 ** Corfu
+*** Corfu Final
 #+begin_src emacs-lisp
   (use-package corfu
       :ensure t
@@ -129,6 +130,8 @@
             ([tab] . corfu-next)
             ("S-TAB" . corfu-previous)
             ([backtab] . corfu-previous)
+  	  ("RET" . corfu-insert)
+  	  ("<return>" . corfu-insert)
   	  ("C-g" . corfu-quit)             ; Cancel popup with C-g
   	  ("<escape>" . corfu-quit)))       ; Cancel popup with Esc
 
@@ -197,7 +200,7 @@
            (rust-mode   . lsp))
     :commands lsp
     :init
-    (setq lsp-completion-provider :none))
+    (setq lsp-completion-provider :corfu))
 #+end_src
 
 * Python
@@ -328,4 +331,11 @@
 #+begin_src emacs-lisp
 (use-package vterm
   :ensure t)
+#+end_src
+
+** iedit
+#+begin_src emacs-lisp
+  (use-package iedit
+    :ensure t)
+  (global-set-key (kbd "C-;") 'iedit-mode)
 #+end_src
